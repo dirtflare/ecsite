@@ -1,5 +1,10 @@
 <?php
 session_start();
+// var_dump($_SESSION['user_id']);
+// exit();
+
+$user_id = $_SESSION['user_id'];
+
 //1.  DB接続します
 try {
   $pdo = new PDO('mysql:dbname=gsacf_l07_02;charset=utf8;host=localhost','root','');
@@ -9,9 +14,11 @@ try {
 
 
 //２．データ抽出SQL作成
-$stmt = $pdo->prepare("SELECT * FROM ec_table");
+$stmt = $pdo->prepare("SELECT * FROM ec_table LEFT OUTER JOIN (SELECT item_id, COUNT(id) AS like_count FROM like_table GROUP BY item_id) AS result_table ON ec_table.id = result_table.item_id");
+// $stmt = $pdo->prepare("SELECT * FROM ec_table LEFT OUTER JOIN (SELECT item_id, COUNT(id) AS like_count FROM like_table GROUP BY item_id) AS result_table ON ec_table.id = result_table.item_id");
 $status = $stmt->execute();
 
+// $output = "item_like.php?user_id={$user_id}&item_id={$row['id']}";
 
 //３．データ表示
 $view="";
@@ -28,6 +35,9 @@ if($status==false) {
     $view .= '<p class="products-thumb"><img src="./img/'.$result["fname"].'" width="200"></p>';
     $view .= '<h3 class="products-title">'.$result["item"].'</h3>';
     $view .= '<p class="products-price">'.$result["value"].'</p>';
+    $view .= "<a href='item_like.php?user_id={$user_id}&item_id={$result["id"]}'>お気に入り</a>";
+    // $view .= '<p>{$record["like_count"]}</p>';
+    $view .= '<p>'.$result["like_count"].'</p>';
     $view .= '</a>';
     $view .= '</li>';
   }
@@ -125,6 +135,8 @@ if($status==false) {
         <!--商品リスト-->
         <ul class="products-list">
             <?php echo $view; ?>
+
+            
         </ul>
         <!--end 商品リスト-->
 

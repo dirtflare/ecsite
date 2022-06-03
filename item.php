@@ -1,24 +1,34 @@
 <?php
+include('functions.php');
 session_start();
 
+// var_dump($_GET['id']);
+// exit();
+
 //GETでidを取得
-if(!isset($_GET["id"]) || $_GET["id"]==""){
+/* if (!isset($_GET["id"]) || $_GET["id"]==""  ){
   exit("ParamError!");
-}else{
+} else{
   $id = intval($_GET["id"]); //intval数値変換
   // echo $id;
-}
+} */
+$id = intval($_GET["id"]); //intval数値変換
+
+                  $user_id = $_SESSION['user_id'];
+                  // var_dump($user_id);
+                  // exit();
+
+
 
 //1.  DB接続します
-try {
-  $pdo = new PDO('mysql:dbname=gsacf_l07_02;charset=utf8;host=localhost','root','');
-} catch (PDOException $e) {
-  exit('データベースに接続できませんでした。'.$e->getMessage());
-}
+$pdo = connect_to_db();
 
 //２．データ登録SQL作成
-$stmt = $pdo->prepare("SELECT * FROM ec_table WHERE id=:id");
-$stmt->bindValue(':id', $id, PDO::PARAM_INT);
+// $stmt = $pdo->prepare("SELECT * FROM ec_table WHERE id=:id");
+$stmt = $pdo->prepare("SELECT * FROM ec_table LEFT OUTER JOIN (SELECT item_id, COUNT(id) AS like_count FROM like_table GROUP BY item_id) AS result_table ON ec_table.id = result_table.item_id");
+// $sql = 'SELECT * FROM todo_table LEFT OUTER JOIN (SELECT todo_id, COUNT(id) AS like_count FROM like_table GROUP BY todo_id) AS result_table ON todo_table.id = result_table.todo_id';
+
+// $stmt->bindValue(':id', $id, PDO::PARAM_INT);
 $status = $stmt->execute();
 
 //３．データ表示
@@ -32,6 +42,15 @@ if($status==false) {
   //Selectデータの数だけ自動でループしてくれる
   $row = $stmt->fetch(); //１レコードだけ取得：$row["フィールド名"]で取得可能
 }
+// echo '<pre>';
+// var_dump($row);
+// echo '<pre>';
+// exit();
+
+// $output = "item_like.php?user_id={$user_id}&item_id={$row['id']}";
+// 'item_like.php?user_id={$user_id}&item_id={$row["id"]}'
+// var_dump($row['id']);
+// exit();
 ?>
 
 
@@ -56,7 +75,6 @@ if($status==false) {
   <div class="outer">
     <!--商品本情報-->
     <div class="wrapper wrapper-item flex-parent">
-
       <main class="wrapper-main">
 
         <!--商品情報-->
